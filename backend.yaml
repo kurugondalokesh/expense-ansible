@@ -55,6 +55,11 @@
       - pymysql
       executable: pip3.9
 
+  - name: Install python3-cryptography
+    ansible.builtin.package:
+      name: python3-cryptography
+      state: present
+
   - name: import mysql data
     community.mysql.mysql_db:
       login_user: root
