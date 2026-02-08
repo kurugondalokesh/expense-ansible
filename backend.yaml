@@ -1,6 +1,9 @@
 - name: Configure backwnd server
   hosts: backend
   become: true
+  vars:
+    login_password: ExpenseApp@1
+    login_host: mysql.lokiaws.online
   tasks:
   - name: Disable node js module
     ansible.builtin.command: "dnf module disable nodejs -y"
@@ -10,8 +13,11 @@
 
   - name: Install node js
     ansible.builtin.package:
-      name: nodejs
+      name: "{{ item }}"
       state: present
+    loop:
+    - nodejs
+    - mysql
 
   - name: Create user
     ansible.builtin.user:
@@ -32,3 +38,31 @@
       src: /tmp/backend.zip
       dest: /app
       remote_src: yes
+
+  - name: install npm dependencies
+    ansible.builtin.command: "npm install"
+    args:
+      chdir: /app
+
+  - name: Copy backend service file
+    ansible.builtin.copy:
+      src: backend.service
+      dest: /etc/systemd/system/backend.service
+
+  - name: install pymysql 
+    ansible.builtin.pip:
+      name:
+      - pymysql
+      executable: pip3.9
+
+  - name: import mysql data
+    community.mysql.mysql_db:
+      login_user: root
+      login_password: "{{ login_password }}"
+      login_host: "{{ login_host }}"
+      name: all
+      state: dump
+      target: /app/schema/backend.sql
+      
+
+  
